@@ -9,8 +9,8 @@ export default function Hero() {
       {/* Hero Image */}
       <div className="absolute inset-0">
         <Image
-          src="/optimized/wildlife/0001.webp"
-          alt="Wildlife Photography"
+          src="/optimized/coast/A3-003 -impressive.webp"
+          alt="Coast Photography"
           fill
           priority
           className="object-cover"

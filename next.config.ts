@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
     // Quality levels for Image component optimization
     // 75: default, 90: hero images, 95: lightbox/full-screen
     qualities: [75, 90, 95],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
   },
   // Allow local network access for mobile testing during development
   // Replace IP with your local network IP (find with: hostname -I)
