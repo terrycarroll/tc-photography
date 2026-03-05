@@ -1,0 +1,8 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+# Sitemap location
+Sitemap: https://terrycarrollphoto.com/sitemap.xml
