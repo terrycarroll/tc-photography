@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cloudinary, GALLERIES, type Gallery } from '../../../lib/cloudinary';
 import { revalidatePath } from 'next/cache';
+import { checkAdminAuth } from '../../../lib/adminAuth';
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -9,10 +10,8 @@ export async function POST(req: NextRequest) {
   const gallery = formData.get('gallery') as string;
   const file = formData.get('file') as File | null;
 
-  // Auth check
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = checkAdminAuth(req, password);
+  if (authError) return authError;
 
   // Validate gallery
   if (!GALLERIES.includes(gallery as Gallery)) {

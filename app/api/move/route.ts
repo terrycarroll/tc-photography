@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cloudinary, GALLERIES, type Gallery } from '../../../lib/cloudinary';
 import { revalidatePath } from 'next/cache';
+import { checkAdminAuth } from '../../../lib/adminAuth';
 
 export async function POST(req: NextRequest) {
   const { password, public_id, to_gallery } = await req.json();
 
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = checkAdminAuth(req, password);
+  if (authError) return authError;
 
   if (!public_id || !String(public_id).startsWith('tc-photography/')) {
     return NextResponse.json({ error: 'Invalid photo' }, { status: 400 });
