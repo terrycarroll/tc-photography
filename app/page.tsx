@@ -1,4 +1,5 @@
 import NavBar from './components/NavBar';
+import AwattsdevFooter from './components/AwattsdevFooter';
 import Hero from './components/Hero';
 import AboutBlurb from './components/AboutBlurb';
 import MasonryGallery from './components/MasonryGallery';
@@ -60,6 +61,7 @@ export default async function Home() {
         <p className="text-gray-400 text-xs">
           Capturing nature&apos;s beauty, one frame at a time
         </p>
+        <AwattsdevFooter />
       </footer>
     </div>
   );
