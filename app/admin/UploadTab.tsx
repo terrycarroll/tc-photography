@@ -19,27 +19,60 @@ export default function UploadTab({ password }: Props) {
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
+
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB client-side guard
+    if (file.size > MAX_SIZE) {
+      setMessage({ type: 'error', text: 'File is too large (max 50MB). Please export a smaller JPEG and try again.' });
+      return;
+    }
+
     setUploading(true);
     setMessage(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('gallery', gallery);
-    formData.append('password', password);
-
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage({
-          type: 'success',
-          text: `Photo uploaded to ${gallery} successfully. It will appear on the site within a minute.`,
-        });
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      } else {
-        setMessage({ type: 'error', text: data.error ?? 'Upload failed. Please try again.' });
+      // Step 1: get a signed upload token from our server
+      const signRes = await fetch('/api/sign-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, gallery }),
+      });
+      const signData = await signRes.json();
+      if (!signRes.ok) {
+        setMessage({ type: 'error', text: signData.error ?? 'Could not start upload. Please try again.' });
+        return;
       }
+
+      // Step 2: upload the file directly to Cloudinary (bypasses Vercel size limits)
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('api_key', signData.api_key);
+      uploadForm.append('timestamp', String(signData.timestamp));
+      uploadForm.append('signature', signData.signature);
+      uploadForm.append('folder', signData.folder);
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${signData.cloud_name}/image/upload`,
+        { method: 'POST', body: uploadForm }
+      );
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        setMessage({ type: 'error', text: err?.error?.message ?? 'Upload to Cloudinary failed. Please try again.' });
+        return;
+      }
+
+      // Step 3: tell the server to refresh the homepage cache
+      await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      setMessage({
+        type: 'success',
+        text: `Photo uploaded to ${gallery} successfully. It will appear on the site within a minute.`,
+      });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch {
       setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
     } finally {
